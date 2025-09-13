@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Comunidad Energética de San Martín (Teverga) - Grupo motor para impulsar la comunidad energética local">
+    <meta name="keywords" content="comunidad energética, energía renovable, Teverga, San Martín, energía solar">
+    <title>Comunidad Energética de San Martín (Teverga)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary-color: #1a5128;
+            --secondary-color: #2c7744;
+            --accent-color: #3d8a54;
+            --light-color: #e8f4ec;
+            --dark-color: #1a2a1e;
+            --text-color: #333;
+            --light-text: #f9f9f9;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+            --border-radius: 15px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 17px;
+            transition: var(--transition);
+        }
+        
+        body.dark-mode {
+            --text-color: #f0f0f0;
+            --light-color: #2a3b2f;
+            background: linear-gradient(135deg, #0d1f12 0%, #1a3323 100%);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+        
+        body.dark-mode .container {
+            background: #24382a;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+            color: var(--light-text);
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            line-height: 1.2;
+        }
+        
+        .header .date, .header .location {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .header .date i, .header .location i {
+            font-size: 1.8rem;
+            color: var(--light-text);
+        }
+        
+        .header .location a {
+            color: var(--light-text);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .header .location a:hover {
+            text-decoration: underline;
+            transform: scale(1.05);
+        }
+        
+        .location-note {
+            font-size: 1rem;
+            margin-top: 5px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        
+        .location-note a {
+            color: var(--light-text);
+            text-decoration: underline;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        body.dark-mode .content {
+            background: #24382a;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--secondary-color);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        body.dark-mode .section {
+            background-color: #2c3e30;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .section-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: var(--shadow);
+            border: 3px solid var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light-color);
+        }
+        
+        .section-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .section h2 {
+            color: var(--secondary-color);
+            margin: 0;
+            font-size: 1.5rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .section p, .section ul {
+            margin-bottom: 15px;
+            padding-left: 10px;
+            font-size: 1.05rem;
+        }
+        
+        .section ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .section li {
+            margin-bottom: 10px;
+            padding-left: 30px;
+            position: relative;
+            font-size: 1.05rem;
+        }
+        
+        .section li:before {
+            content: "•";
+            color: var(--secondary-color);
+            font-weight: bold;
+            position: absolute;
+            left: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .highlight {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent-color);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+        
+        body.dark-mode .highlight {
+            background-color: #324635;
+        }
+        
+        .quote {
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+            margin: 25px 0;
+            color: var(--secondary-color);
+            border-top: 1px solid #d0e6d9;
+            border-bottom: 1px solid #d0e6d9;
+            font-size: 1.4rem;
+            position: relative;
+        }
+        
+        body.dark-mode .quote {
+            border-color: #3a5143;
+        }
+        
+        .footer {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            text-align: center;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+            font-size: 1.1rem;
+        }
+        
+        .ayto-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: var(--light-text);
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+        
+        .ayto-link:hover {
+            text-decoration: underline;
+            transform: scale(1.05);
+        }
+        
+        .ayto-logo {
+            height: 90px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .ayto-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .benefit-card {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-top: 4px solid var(--accent-color);
+            transition: var(--transition);
+        }
+        
+        body.dark-mode .benefit-card {
+            background: #2c3e30;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .benefit-card i {
+            font-size: 2.7rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        .benefit-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .benefit-card p {
+            font-size: 1.05rem;
+        }
+        
+        .collaboration {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            color: var(--light-text);
+        }
+        
+        .faen-logo {
+            height: 70px;
+            width: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .faen-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        .final-message {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-style: italic;
+            max-width: 600px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            cursor: pointer;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 2px solid #000;
+        }
+        
+        .video-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
+            border-color: #333;
+        }
+        
+        .video-thumbnail {
+            width: 100%;
+            display: block;
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+        
+        .video-container:hover .video-thumbnail {
+            filter: brightness(1.1);
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+        
+        .video-container:hover .play-button {
+            background-color: rgba(255, 0, 0, 0.9);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .play-button::before {
+            content: "";
+            border-style: solid;
+            border-width: 15px 0 15px 26px;
+            border-color: transparent transparent transparent white;
+        }
+        
+        .video-caption {
+            text-align: center;
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        body.dark-mode .video-caption {
+            color: #aaa;
+        }
+        
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .countdown-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            min-width: 70px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .countdown-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: block;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .countdown-label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cta-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #ddd;
+            margin: 25px 0;
+            width: 100%;
+        }
+        
+        body.dark-mode .divider {
+            background-color: #3a5143;
+        }
+        
+        .form-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 24px;
+            background-color: var(--secondary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: var(--transition);
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+        }
+        
+        .form-link:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        /* Formulario de inscripción */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .form-container {
+            background: #2c3e30;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        body.dark-mode .form-group label {
+            color: var(--accent-color);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        body.dark-mode .form-control {
+            background: #24382a;
+            border-color: #3a5143;
+            color: #f0f0f0;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(61, 138, 84, 0.2);
+        }
+        
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Galería de imágenes */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            border-radius: 8px;
+            overflow: hidden;
+            height: 150px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+        
+        /* FAQ Acordeón */
+        .faq-item {
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .faq-question {
+            padding: 15px 20px;
+            background: var(--light-color);
+            color: var(--secondary-color);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+        
+        body.dark-mode .faq-question {
+            background: #324635;
+        }
+        
+        .faq-question:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            background: white;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        
+        body.dark-mode .faq-answer {
+            background: #2c3e30;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 20px;
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* Mapa interactivo */
+        .map-container {
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        /* Botón modo oscuro */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: var(--transition);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Botón volver arriba */
+        .back-to-top {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-5px);
+        }
+        
+        /* Compartir en redes sociales */
+        .social-share {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .social-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--light-color);
+            color: var(--secondary-color);
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .social-btn:hover {
+            transform: translateY(-3px);
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        /* Estilos para ocultar la atribución de Leaflet */
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.6rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            body {
+                font-size: 16px;
+                padding: 15px;
+            }
+            
+            .quote {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+            
+            .play-button {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .play-button::before {
+                border-width: 12px 0 12px 20px;
+            }
+            
+            .video-container {
+                max-width: 100%;
+            }
+            
+            .countdown {
+                gap: 10px;
+            }
+            
+            .countdown-item {
+                min-width: 60px;
+                padding: 8px 10px;
+            }
+            
+            .countdown-number {
+                font-size: 1.5rem;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header .date, .header .location {
+                font-size: 1.1rem;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .section-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .section h2 {
+                font-size: 1.3rem;
+            }
+            
+            .ayto-text {
+                font-size: 1.2rem;
+            }
+            
+            .ayto-logo {
+                height: 70px;
+            }
+            
+            .contact-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+            
+            .social-share {
+                flex-wrap: wrap;
+            }
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* QR Code */
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .qr-code {
+            background: #2c3e30;
+        }
+        
+        .qr-code img {
+            max-width: 150px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .qr-code p {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        body.dark-mode .qr-code p {
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header" role="banner">
+            <h1>Comunidad Energética de San Martín (Teverga)</h1>
+            <div class="date">
+                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                <span>Jueves 25 de septiembre 2025 - 17:00h</span>
+            </div>
+            <div class="location">
+                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                <a href="https://maps.app.goo.gl/w2bvQXXrRdg1H9Ky9" target="_blank" rel="noopener noreferrer">
+                    Sala de reuniones (1º planta) - Casa de Cultura de San Martín
+                </a>
+            </div>
+            <div class="location-note">
+                (<a href="https://maps.app.goo.gl/w2bvQXXrRdg1H9Ky9" target="_blank" rel="noopener noreferrer">click en el enlace para ver ubicación</a>)
+            </div>
+            
+            <div class="countdown" id="countdown">
+                <div class="countdown-item">
+                    <span class="countdown-number" id="days">00</span>
+                    <span class="countdown-label">días</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="hours">00</span>
+                    <span class="countdown-label">horas</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="minutes">00</span>
+                    <span class="countdown-label">minutos</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="seconds">00</span>
+                    <span class="countdown-label">segundos</span>
+                </div>
+            </div>
+            
+            <a href="#formulario" class="cta-button">¡Quiero participar!</a>
+            
+            <div class="social-share">
+                <a class="social-btn" href="https://www.facebook.com/sharer/sharer.php?u=https://example.com" target="_blank" aria-label="Compartir en Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a class="social-btn" href="https://web.whatsapp.com/send?text=¡Mira esta iniciativa de Comunidad Energética en Teverga! https://example.com" target="_blank" aria-label="Compartir en WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a class="social-btn" href="mailto:?subject=Comunidad Energética de San Martín&body=¡Mira esta iniciativa de Comunidad Energética en Teverga! https://example.com" aria-label="Compartir por correo">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <button class="social-btn" onclick="copyLink()" aria-label="Copiar enlace">
+                    <i class="fas fa-link"></i>
+                </button>
+            </div>
+
+            <div class="qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com" alt="Código QR para compartir">
+                <p>Escanea el código QR para compartir</p>
+            </div>
+        </header>
+        
+        <main class="content" role="main">
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=400" alt="Paneles solares comunitarios">
+                    </div>
+                    <h2>Convocatoria de Reunión</h2>
+                </div>
+                <p>Creación del <strong>"Grupo Motor"</strong> para impulsar la comunidad energética local:</p>
+                <ul>
+                    <li>Participa en la creación de la Comunidad Energética Local de San Martín.</li>
+                    <li>Pueden unirse vecinos y empresas en un radio de <strong>2 km</strong>.</li>
+                    <li>Sin coste inicial para los participantes.</li>
+                    <li>Posibilidad de ahorro desde el primer momento.</li>
+                </ul>
+                
+                <div class="map-container">
+                    <div id="map" style="height: 100%; width: 100%;"></div>
+                </div>
+                
+                <div class="quote">
+                    <strong>¡La revolución energética es el presente!</strong>
+                </div>
+            </section>
+            
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <img src="https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&q=80&w=400" alt="Comunidad energética">
+                    </div>
+                    <h2>¿Qué es una Comunidad Energética?</h2>
+                </div>
+                <p>Una comunidad energética es un grupo de personas y entidades que se unen para generar y gestionar su propia energía <strong>en un radio de 2km</strong>.</p>
+                <div class="highlight">
+                    <p>Es un modelo colaborativo donde los participantes producen, consumen y gestionan su propia energía renovable, fomentando la autosuficiencia y la sostenibilidad.</p>
+                </div>
+                
+                <div class="gallery">
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&q=80&w=400" alt="Comunidad energética 2">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&q=80&w=400" alt="Comunidad energética 3">
+                    </div>
+                </div>
+                
+                <p>Las comunidades energéticas permiten a los ciudadanos tomar el control sobre su energía, reducir costes y contribuir activamente a la transición energética.</p>
+            </section>
+            
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-hand-holding-heart" aria-hidden="true"></i>
+                    </div>
+                    <h2>Beneficios</h2>
+                </div>
+                <p>Ventajas de participar en la comunidad energética:</p>
+                
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <i class="fas fa-euro-sign" aria-hidden="true"></i>
+                        <h3>Ahorro económico</h3>
+                        <p>Reducción directa en la factura de la luz para todos los participantes</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <i class="fas fa-leaf" aria-hidden="true"></i>
+                        <h3>Energía limpia</h3>
+                        <p>Generación de energía renovable y sostenible</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                        <h3>Independencia</h3>
+                        <p>Autonomía energética y menor dependencia de grandes compañías</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <i class="fas fa-hands-helping" aria-hidden="true"></i>
+                        <h3>Comunidad</h3>
+                        <p>Fortalecimiento del tejido social y comunitario</p>
+                    </div>
+                </div>
+                
+                <div class="quote">
+                    <strong>Cuando nos unimos, la energía se multiplica</strong>
+                </div>
+            </section>
+            
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80&w=400" alt="Instalación paneles solares">
+                    </div>
+                    <h2>Fase 1: Impulsada por el Ayuntamiento</h2>
+                </div>
+                <p>El Ayuntamiento cederá espacios para desarrollar la comunidad, los vecinos e interesados solo deben unirse y beneficiarse de forma gratuita de los ahorros generados.</p>
+                
+                <div class="highlight">
+                    <p>Los vecinos e interesados pueden unirse sin coste inicial y comenzar a beneficiarse de los ahorros generados desde el primer momento.</p>
+                </div>
+                
+                <p>El Ayuntamiento asumirá la inversión inicial y la gestión, facilitando que todos los vecinos puedan participar sin barreras económicas.</p>
+            </section>
+            
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <img src="https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&q=80&w=400" alt="Desarrollo comunitario">
+                    </div>
+                    <h2>Impacto en el Desarrollo de Teverga</h2>
+                </div>
+                <p>La comunidad energética potenciará el desarrollo de Teverga a través de:</p>
+                
+                <ul>
+                    <li><strong>Fortalecimiento del tejido comunitario:</strong> Ahorros económicos para vecinos, empresas y Ayuntamiento.</li>
+                    <li><strong>Generación de ingresos adicionales:</strong> Posibilidad de obtener recursos con la venta de excedentes energéticos.</li>
+                    <li><strong>Independencia energética:</strong> Reduce la volatilidad de precios del mercado eléctrico y la dependencia de las grandes compañías energéticas.</li>
+                    <li><strong>Atracción de nuevos residentes:</strong> Municipios sostenibles son más atractivos para nuevos habitantes.</li>
+                    <li><strong>Lucha contra el cambio climático:</strong> Reducción de la huella de carbono del municipio.</li>
+                </ul>
+            </section>
+            
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-question-circle" aria-hidden="true"></i>
+                    </div>
+                    <h2>Preguntas Frecuentes</h2>
+                </div>
+                
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>¿Quién puede unirse a la comunidad energética?</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Todos los vecinos y empresas ubicadas en un radio de 2 km desde el punto de generación de energía pueden unirse a la comunidad energética.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>¿Hay algún coste de participación?</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>No, el Ayuntamiento asume la inversión inicial. Los participantes pueden unirse sin coste y comenzar a ahorrar desde el primer momento.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>¿Qué compromiso adquiero al unirme?</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Puedes participar de forma flexible. La adhesión no conlleva compromisos permanentes y puedes ajustar tu nivel de participación.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>¿Cuánto puedo ahorrar?</span>
+                            <i class="fas fa-chevron-down faq-icon"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Los ahorros dependen del consumo y la producción, pero normalmente los participantes pueden ahorrar entre un 20% y 30% en su factura eléctrica.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="section" id="formulario">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=400" alt="Más información">
+                    </div>
+                    <h2>Más Información</h2>
+                </div>
+                <p>Para conocer más sobre las comunidades energéticas y su impacto, te invitamos a ver el siguiente vídeo explicativo:</p>
+                
+                <div class="divider"></div>
+                
+                <a href="https://youtu.be/jY31GNncdPM?feature=shared" target="_blank" rel="noopener noreferrer" class="video-container">
+                    <img src="https://www.tierra.org/comunidades-energeticas/wp-content/uploads/2021/02/logo_redondo3.png" alt="Vídeo sobre Comunidades Energéticas" class="video-thumbnail">
+                    <div class="play-button" aria-hidden="true"></div>
+                    <span class="sr-only">Ver video sobre comunidades energéticas (se abrirá en una nueva pestaña)</span>
+                </a>
+                <div class="video-caption">Haz clic en la imagen para ver el vídeo</div>
+                
+                <div class="highlight">
+                    <p>Complete el siguiente formulario para inscribirse o solicitar más información:</p>
+                    
+                    <div class="form-container">
+                        <form id="inscription-form" action="mailto:alcaldia@aytoteverga.org" method="post" enctype="text/plain">
+                            <div class="form-group">
+                                <label for="name">Nombre completo *</label>
+                                <input type="text" id="name" name="name" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Correo electrónico *</label>
+                                <input type="email" id="email" name="email" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="address">Dirección (opcional)</label>
+                                <input type="text" id="address" name="address" class="form-control">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="interest">Nivel de interés</label>
+                                <select id="interest" name="interest" class="form-control">
+                                    <option value="">Seleccione una opción</option>
+                                    <option value="info">Solo información</option>
+                                    <option value="collaborator">Quiero colaborar activamente</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="message">Mensaje o preguntas</label>
+                                <textarea id="message" name="message" class="form-control"></textarea>
+                            </div>
+                            
+                            <input type="hidden" name="subject" value="Solicitud de información - Comunidad Energética San Martín">
+                            
+                            <button type="submit" class="cta-button">Enviar solicitud</button>
+                        </form>
+                    </div>
+                    
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-phone" aria-hidden="true"></i>
+                            <a href="tel:+34985764202" style="color: var(--secondary-color); text-decoration: none; font-weight: bold;">985 76 42 02</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer" role="contentinfo">
+            <a href="https://www.ayto-teverga.org/" class="ayto-link" target="_blank" rel="noopener noreferrer">
+                <img src="https://elxiblu.es/wp-content/uploads/2019/07/logo-ayto-teverga.png" alt="Escudo Ayuntamiento de Teverga" class="ayto-logo">
+                <span class="ayto-text">Ayuntamiento de Teverga</span>
+            </a>
+            
+            <div class="collaboration">
+                <img src="https://faen.es/wp-content/uploads/2023/08/faen-fundacion-asturiana-energia-logo.png" alt="Logo FAEN" class="faen-logo">
+                <div class="faen-text">Colabora: Fundación Asturiana de la Energía (FAEN) - Oficina de Transformación Comunitaria (OTC)</div>
+            </div>
+            
+            <p>PRINCIPADO DE ASTURIAS</p>
+            
+            <div class="final-message">
+                Ayuntamiento de Teverga: comprometidos con el desarrollo de nuestro municipio
+            </div>
+        </footer>
+    </div>
+
+    <!-- Botones flotantes -->
+    <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar modo claro/oscuro">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <button class="back-to-top" id="back-to-top" aria-label="Volver arriba">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Leaflet JS para OpenStreetMap -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Inicializar el mapa de OpenStreetMap
+        function initMap() {
+            // Coordenadas exactas de San Martín, Teverga
+            const sanMartinCoords = [43.15969, -6.0970];
+            
+            // Crear el mapa con zoom 12
+            const map = L.map('map').setView(sanMartinCoords, 12);
+            
+            // Añadir capa de OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Añadir marcador para San Martín
+            L.marker(sanMartinCoords)
+                .addTo(map)
+                .bindPopup('San Martín, Teverga')
+                .openPopup();
+            
+            // Añadir círculo de 2000 metros (radio en metros)
+            L.circle(sanMartinCoords, {
+                color: '#1a5128',
+                fillColor: '#1a5128',
+                fillOpacity: 0.2,
+                radius: 2000
+            }).addTo(map);
+        }
+        
+        // Countdown para la fecha del evento
+        function updateCountdown() {
+            const eventDate = new Date('2025-09-25T17:00:00');
+            const now = new Date();
+            const diff = eventDate - now;
+            
+            if (diff <= 0) {
+                document.getElementById('countdown').innerHTML = '<p>El evento ya ha tenido lugar. ¡Gracias por participar!</p>';
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            
+            requestAnimationFrame(updateCountdown);
+        }
+        
+        // Funcionalidad para el acordeón de FAQ
+        function setupFAQ() {
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', () => {
+                    const item = question.parentElement;
+                    item.classList.toggle('active');
+                });
+            });
+        }
+        
+        // Botón volver arriba
+        function setupBackToTop() {
+            const backToTopButton = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.classList.add('show');
+                } else {
+                    backToTopButton.classList.remove('show');
+                }
+            });
+            
+            backToTopButton.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+        
+        // Modo oscuro/claro
+        function setupThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = themeToggle.querySelector('i');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Establecer tema inicial según preferencias del sistema
+            if (prefersDarkScheme.matches) {
+                document.body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+            
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                }
+            });
+        }
+        
+        // Formulario de inscripción
+        function setupForm() {
+            const contactForm = document.getElementById('inscription-form');
+            
+            contactForm.addEventListener('submit', function(e) {
+                // El formulario se enviará por correo electrónico directamente
+            });
+        }
+        
+        // Función para copiar enlace
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url)
+                .then(() => {
+                    // No mostrar notificación como se solicitó
+                })
+                .catch(err => {
+                    console.error('Error al copiar el enlace: ', err);
+                });
+        }
+        
+        // Actualizar enlaces de compartir con la URL actual
+        function updateShareLinks() {
+            const currentUrl = encodeURIComponent(window.location.href);
+            const message = encodeURIComponent('¡Mira esta iniciativa de Comunidad Energética en Teverga!');
+            
+            // Actualizar enlace de Facebook
+            document.querySelector('[aria-label="Compartir en Facebook"]').href = 
+                `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`;
+            
+            // Actualizar enlace de WhatsApp
+            document.querySelector('[aria-label="Compartir en WhatsApp"]').href = 
+                `https://web.whatsapp.com/send?text=${message} ${currentUrl}`;
+            
+            // Actualizar enlace de correo
+            document.querySelector('[aria-label="Compartir por correo"]').href = 
+                `mailto:?subject=Comunidad Energética de San Martín&body=${message} ${currentUrl}`;
+            
+            // Actualizar código QR
+            document.querySelector('.qr-code img').src = 
+                `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}`;
+        }
+        
+        // Galería de imágenes (lightbox básico)
+        function setupGallery() {
+            document.querySelectorAll('.gallery-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const imgSrc = item.querySelector('img').src;
+                    const lightbox = document.createElement('div');
+                    lightbox.style.position = 'fixed';
+                    lightbox.style.top = '0';
+                    lightbox.style.left = '0';
+                    lightbox.style.width = '100%';
+                    lightbox.style.height = '100%';
+                    lightbox.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                    lightbox.style.display = 'flex';
+                    lightbox.style.justifyContent = 'center';
+                    lightbox.style.alignItems = 'center';
+                    lightbox.style.zIndex = '1000';
+                    lightbox.style.cursor = 'pointer';
+                    
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.style.maxWidth = '90%';
+                    img.style.maxHeight = '90%';
+                    
+                    lightbox.appendChild(img);
+                    document.body.appendChild(lightbox);
+                    
+                    lightbox.addEventListener('click', () => {
+                        document.body.removeChild(lightbox);
+                    });
+                });
+            });
+        }
+        
+        // Smooth scroll para el botón CTA
+        function setupSmoothScroll() {
+            document.querySelector('.cta-button').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('#formulario').scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        }
+        
+        // Inicializar todo cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            updateCountdown();
+            setupFAQ();
+            setupBackToTop();
+            setupThemeToggle();
+            setupForm();
+            updateShareLinks();
+            setupGallery();
+            setupSmoothScroll();
+        });
+    </script>
+</body>
+</html>
